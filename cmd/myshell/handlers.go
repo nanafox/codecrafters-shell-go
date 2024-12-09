@@ -72,7 +72,8 @@ func handleType(splitCommand []string) (code int) {
 	if isShellBuiltin(command) {
 		fmt.Printf("%s is a shell builtin\n", command)
 	} else {
-		return handleCmdNotFound(command)
+		fmt.Printf("%s: not found\n", command)
+		return COMMAND_NOT_FOUND
 	}
 	return EXIT_SUCCESS
 }
