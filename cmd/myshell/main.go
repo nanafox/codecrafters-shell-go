@@ -30,7 +30,7 @@ func main() {
 			}
 		}
 
-		_ = handleCommand(cmd)
+		lastExitCode = handleCommand(cmd)
 	}
 }
 
@@ -49,25 +49,19 @@ func handleCommand(cmd string) int {
 	splitCommand := strings.Split(cmd, " ")
 	majorCommand := splitCommand[0]
 
-	// hard code a few commands to start with
-	if majorCommand == "exit" {
+	switch majorCommand {
+	case "exit":
 		return handleExit(splitCommand)
-	}
-
-	if cmd == "$?" || cmd == "$status" {
-		fmt.Println(lastExitCode)
-		lastExitCode = EXIT_SUCCESS
-		return lastExitCode
-	}
-
-	// handle empty commands
-	if cmd == "" {
+	case "":
 		return EXIT_SUCCESS
+	case "echo":
+		handleEcho(splitCommand)
+	default:
+		fmt.Fprintf(os.Stderr, "%s: command not found\n", cmd)
+		return COMMAND_NOT_FOUND
 	}
 
-	fmt.Fprintf(os.Stderr, "%s: command not found\n", cmd)
-	lastExitCode = COMMAND_NOT_FOUND
-	return lastExitCode
+	return EXIT_SUCCESS
 }
 
 // handleExit handles the exit command and exits the shell when the command is
@@ -84,4 +78,17 @@ func handleExit(splitCommand []string) (code int) {
 	}
 	os.Exit(lastExitCode)
 	return
+}
+
+// handleEcho handles the echo command and prints the arguments to the terminal
+// or the exit code if the argument is $? or $status
+func handleEcho(splitCommand []string) {
+	if len(splitCommand) == 2 {
+		if splitCommand[1] == "$?" || splitCommand[1] == "$status" {
+			fmt.Println(lastExitCode)
+			return
+		}
+	}
+
+	fmt.Println(strings.Join(splitCommand[1:], " "))
 }
