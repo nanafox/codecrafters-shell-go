@@ -11,5 +11,5 @@ const ILLEGAL_NUMBER = 2
 const COMMAND_NOT_FOUND = 127
 
 var shell_builtin_cmds = []string{
-	"exit", "echo", "type",
+	"exit", "echo", "type", "pwd",
 }
