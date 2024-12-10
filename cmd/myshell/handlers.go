@@ -27,6 +27,8 @@ func handleCommand(cmd string) int {
 		handleEcho(splitCommand)
 	case "type":
 		return handleType(splitCommand)
+	case "pwd":
+		return handleCwd()
 	default:
 		return runCommand(splitCommand)
 	}
@@ -110,4 +112,19 @@ func runCommand(splitCommand []string) (code int) {
 		return cmd.ProcessState.ExitCode() // return the error code from the process
 	}
 	return EXIT_SUCCESS
+}
+
+// handleCwd prints the current working directory and returns.
+func handleCwd() (code int) {
+	if cwd, err := os.Getwd(); err == nil {
+		fmt.Println(cwd)
+		code = EXIT_SUCCESS
+	} else {
+		fmt.Fprintf(
+			os.Stderr, "pwd: an error occurred while retrieving the current path",
+		)
+		code = 1
+	}
+
+	return
 }
