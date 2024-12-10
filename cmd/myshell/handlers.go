@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"slices"
 	"strconv"
 	"strings"
@@ -71,6 +72,8 @@ func handleType(splitCommand []string) (code int) {
 	command := splitCommand[1]
 	if isShellBuiltin(command) {
 		fmt.Printf("%s is a shell builtin\n", command)
+	} else if path, err := exec.LookPath(command); err == nil {
+		fmt.Printf("%s is %s\n", command, path)
 	} else {
 		fmt.Printf("%s: not found\n", command)
 		return COMMAND_NOT_FOUND
