@@ -28,7 +28,7 @@ func handleCommand(cmd string) int {
 	case "type":
 		return handleType(splitCommand)
 	default:
-		return handleCmdNotFound(majorCommand)
+		return runCommand(splitCommand)
 	}
 
 	return EXIT_SUCCESS
@@ -90,4 +90,24 @@ func isShellBuiltin(command string) bool {
 func handleCmdNotFound(command string) (code int) {
 	fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
 	return COMMAND_NOT_FOUND
+}
+
+// runCommand runs the command with the given arguments.
+//
+// It checks if the command is in the PATH and runs it if it is found. An error
+// is returned if the command is not found.
+func runCommand(splitCommand []string) (code int) {
+	cmd := exec.Command(splitCommand[0], splitCommand[1:]...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	if err := cmd.Run(); err != nil {
+		if strings.Contains(err.Error(), "executable file not found") {
+			return handleCmdNotFound(splitCommand[0])
+		}
+
+		return cmd.ProcessState.ExitCode() // return the error code from the process
+	}
+	return EXIT_SUCCESS
 }
