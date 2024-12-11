@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"slices"
 	"strconv"
 	"strings"
 )
@@ -85,35 +84,10 @@ func handleType(splitCommand []string) (code int) {
 	return EXIT_SUCCESS
 }
 
-// isShellBuiltin checks if the command is a shell builtin.
-func isShellBuiltin(command string) bool {
-	return slices.Contains(shell_builtin_cmds, command)
-}
-
 // handlCmdNotFound handles the case where the command is not found.
 func handleCmdNotFound(command string) (code int) {
 	fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
 	return COMMAND_NOT_FOUND
-}
-
-// runCommand runs the command with the given arguments.
-//
-// It checks if the command is in the PATH and runs it if it is found. An error
-// is returned if the command is not found.
-func runCommand(splitCommand []string) (code int) {
-	cmd := exec.Command(splitCommand[0], splitCommand[1:]...)
-	cmd.Stdin = os.Stdin
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	if err := cmd.Run(); err != nil {
-		if strings.Contains(err.Error(), "executable file not found") {
-			return handleCmdNotFound(splitCommand[0])
-		}
-
-		return cmd.ProcessState.ExitCode() // return the error code from the process
-	}
-	return EXIT_SUCCESS
 }
 
 // handleCwd prints the current working directory and returns.
@@ -134,17 +108,52 @@ func handleCwd() (code int) {
 // handleChdir handles the `cd` command.
 func handleChdir(splitCommand []string) (code int) {
 	var err error
+	var path string
 
-	if len(splitCommand) == 1 || splitCommand[1] == "~" {
+	oldPwd := os.Getenv("PWD")
+
+	if len(splitCommand) > 1 {
+		path = strings.Trim(splitCommand[1], " ")
+	}
+	if len(splitCommand) == 1 || path == "~" || path == "" {
 		if err = os.Chdir(os.Getenv("HOME")); err == nil {
+			updateCwd(oldPwd, os.Getenv("HOME"))
 			return EXIT_SUCCESS
 		}
 	}
 
-	if err = os.Chdir(splitCommand[1]); err == nil {
+	if err = os.Chdir(path); err == nil {
+		updateCwd(oldPwd, path)
 		return EXIT_SUCCESS
+	}
+
+	if path == "-" {
+		return handleOldPwd(oldPwd)
 	}
 
 	fmt.Fprintln(os.Stderr, err)
 	return EXIT_FAILURE
+}
+
+// handleOldPwd handles the `cd -` command and argument. This ensures that
+// changing back and forth between current and the immediate past path is
+// possible.
+func handleOldPwd(oldPwd string) (code int) {
+	newPwd := os.Getenv("OLDPWD")
+
+	if newPwd == "" {
+		newPwd = oldPwd
+	}
+
+	if err := os.Chdir(newPwd); err == nil {
+		updateCwd(oldPwd, newPwd)
+
+		fmt.Println(newPwd)
+	} else {
+		fmt.Fprintln(os.Stderr, err)
+		return EXIT_FAILURE
+
+	}
+
+	return EXIT_SUCCESS
 }
