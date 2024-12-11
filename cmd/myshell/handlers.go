@@ -29,6 +29,8 @@ func handleCommand(cmd string) int {
 		return handleType(splitCommand)
 	case "pwd":
 		return handleCwd()
+	case "cd":
+		return handleChdir(splitCommand)
 	default:
 		return runCommand(splitCommand)
 	}
@@ -127,4 +129,22 @@ func handleCwd() (code int) {
 	}
 
 	return
+}
+
+// handleChdir handles the `cd` command.
+func handleChdir(splitCommand []string) (code int) {
+	var err error
+
+	if len(splitCommand) == 1 || splitCommand[1] == "~" {
+		if err = os.Chdir(os.Getenv("HOME")); err == nil {
+			return EXIT_SUCCESS
+		}
+	}
+
+	if err = os.Chdir(splitCommand[1]); err == nil {
+		return EXIT_SUCCESS
+	}
+
+	fmt.Fprintln(os.Stderr, err)
+	return EXIT_FAILURE
 }
