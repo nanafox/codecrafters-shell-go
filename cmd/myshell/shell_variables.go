@@ -4,6 +4,8 @@ var lastExitCode int = 0
 
 const EXIT_SUCCESS = 0
 
+const EXIT_FAILURE = 1
+
 const INVALID_ARGUMENT = 1
 
 const ILLEGAL_NUMBER = 2
