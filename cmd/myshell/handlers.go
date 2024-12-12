@@ -131,7 +131,8 @@ func handleChdir(splitCommand []string) (code int) {
 		return handleOldPwd(oldPwd)
 	}
 
-	fmt.Fprintln(os.Stderr, err)
+	cdError := strings.Replace(err.Error(), "chdir", "cd", 1)
+	fmt.Fprintln(os.Stderr, cdError)
 	return EXIT_FAILURE
 }
 
