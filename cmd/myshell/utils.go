@@ -48,3 +48,25 @@ func runCommand(splitCommand []string) (code int) {
 func isShellBuiltin(command string) bool {
 	return slices.Contains(shell_builtin_cmds, command)
 }
+
+// capitalizeFirst capitalizes the first letter of a string.
+func capitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
+}
+
+// formatChdirError transforms the default chdir error into the desired format.
+func formatChdirError(err error, dir string) error {
+	// Check if it's a "chdir" error (basic safeguard, can be expanded as needed)
+	if strings.Contains(err.Error(), "chdir") {
+		return fmt.Errorf(
+			"cd: %s: %s",
+			dir,
+			capitalizeFirst(strings.Replace(err.Error(), "chdir "+dir+": ", "", 1)),
+		)
+	}
+	// Return the original error if it's not what we expect
+	return err
+}
