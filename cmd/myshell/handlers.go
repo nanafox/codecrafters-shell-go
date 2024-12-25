@@ -17,6 +17,8 @@ func handleCommand(cmd string) int {
 	splitCommand := strings.Split(cmd, " ")
 	majorCommand := splitCommand[0]
 
+	splitCommand = handleSingleQuotes(splitCommand)
+
 	switch majorCommand {
 	case "exit":
 		return handleExit(splitCommand)
@@ -157,4 +159,18 @@ func handleOldPwd(oldPwd string) (code int) {
 	}
 
 	return EXIT_SUCCESS
+}
+
+// handleSingleQuotes strips away all single quotes from the command.
+func handleSingleQuotes(splitCommand []string) (cmdArray []string) {
+	if len(splitCommand) == 0 {
+		return splitCommand
+	}
+
+	cmdArray = strings.Split(
+		strings.ReplaceAll(
+			strings.Join(splitCommand, " "), "'", ""), " ",
+	)
+
+	return
 }
