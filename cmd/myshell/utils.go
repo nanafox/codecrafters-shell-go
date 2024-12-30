@@ -70,3 +70,32 @@ func formatChdirError(err error, dir string) error {
 	// Return the original error if it's not what we expect
 	return err
 }
+
+// parseSingleQuotes strips away all single quotes from the command.
+func parseSingleQuotes(splitCommand []string) (cmdArray []string) {
+	if len(splitCommand) == 0 {
+		return splitCommand
+	}
+
+	cmdArray = make([]string, 0, len(splitCommand))
+	cmdArray = append(cmdArray, splitCommand[0])
+	currentPosition := 1
+
+	for i := 1; i <= len(splitCommand[1:]); i++ {
+		word := splitCommand[i]
+		if strings.HasSuffix(word, "'") {
+			cmdArray = append(
+				cmdArray,
+				strings.ReplaceAll(strings.Join(splitCommand[currentPosition:i+1], " "), "'", ""),
+			)
+			currentPosition = i + 1
+		} else {
+			if word == "" || strings.HasPrefix(word, "'") {
+				continue // skip empty words and the start of single quotes
+			}
+			cmdArray = append(cmdArray, word)
+		}
+	}
+
+	return
+}
